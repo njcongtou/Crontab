@@ -3,5 +3,7 @@
   "apiReadTimeout": 5000,
   "apiWriteTimeout": 5000,
   "etcdEndpoints": ["localhost:2379", "localhost:22379", "localhost:32379"],
-  "etcdDialTimeout": 5000
+  "etcdDialTimeout": 5000,
+  "web页面目录": "静态页面，前后端分离开发",
+  "webroot": "./webroot"
 }

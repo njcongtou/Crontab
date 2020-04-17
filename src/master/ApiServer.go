@@ -195,9 +195,11 @@ ERR:
 // 需要被其他调用，就public
 func InitApiServer() (err error) { // err 在这里定义住了，下面的return就不用再去返回err
 	var (
-		mux        *http.ServeMux
-		listener   net.Listener
-		httpServer *http.Server
+		mux           *http.ServeMux
+		listener      net.Listener
+		httpServer    *http.Server
+		staticDir     http.Dir     // 静态文件根目录
+		staticHandler http.Handler // 静态文件的HTTP回调
 	)
 
 	// 配置路由
@@ -206,6 +208,13 @@ func InitApiServer() (err error) { // err 在这里定义住了，下面的retur
 	mux.HandleFunc("/job/delete", handleJobDelete)
 	mux.HandleFunc("/job/list", handleJobList)
 	mux.HandleFunc("/job/kill", handleJobKill)
+
+	// /index.html
+
+	// 静态文件目录
+	staticDir = http.Dir(G_config.Webroot)
+	staticHandler = http.FileServer(staticDir)            // 用了内置的路由库
+	mux.Handle("/", http.StripPrefix("/", staticHandler)) // /index.html -> index.html. 先去掉了/进行转化. ./webroot/index.html 得到了磁盘的路径
 
 	if listener, err = net.Listen("tcp", ":"+strconv.Itoa(G_config.ApiPort)); err != nil {
 		return
