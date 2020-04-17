@@ -158,6 +158,39 @@ ERR:
 
 }
 
+// 强制杀死某个任务
+func handleJobKill(w http.ResponseWriter, r *http.Request) {
+	var (
+		err   error
+		name  string
+		bytes []byte
+	)
+
+	if err = r.ParseForm(); err != nil {
+		goto ERR
+
+	}
+
+	name = r.PostForm.Get("name")
+
+	// 杀死任务
+	if err = G_jobMgr.KillJobs(name); err != nil {
+		goto ERR
+	}
+
+	// 正常应答
+	if bytes, err = common.BuildResponse(0, "success", nil); err == nil {
+		w.Write(bytes)
+	}
+	return
+
+ERR:
+	if bytes, err = common.BuildResponse(-1, err.Error(), nil); err == nil {
+		w.Write(bytes)
+	}
+
+}
+
 // 初始化服务
 // 需要被其他调用，就public
 func InitApiServer() (err error) { // err 在这里定义住了，下面的return就不用再去返回err
@@ -172,6 +205,7 @@ func InitApiServer() (err error) { // err 在这里定义住了，下面的retur
 	mux.HandleFunc("/job/save", handleJobSave)
 	mux.HandleFunc("/job/delete", handleJobDelete)
 	mux.HandleFunc("/job/list", handleJobList)
+	mux.HandleFunc("/job/kill", handleJobKill)
 
 	if listener, err = net.Listen("tcp", ":"+strconv.Itoa(G_config.ApiPort)); err != nil {
 		return
