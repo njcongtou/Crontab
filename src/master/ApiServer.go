@@ -65,6 +65,41 @@ ERR:
 	}
 }
 
+// 删除任务接口
+// POST /job/delete name=job1
+func handleJobDelete(w http.ResponseWriter, r *http.Request) {
+	var (
+		err    error
+		name   string
+		oldJob *common.Job
+		bytes  []byte
+	)
+
+	// POST: a=1&b=2&c=3
+	if err = r.ParseForm(); err != nil {
+		goto ERR
+	}
+
+	// 删除的任务名
+	name = r.PostForm.Get("name")
+
+	// 去删除任务
+	if oldJob, err = G_jobMgr.DeleteJob(name); err != nil {
+		goto ERR
+	}
+
+	// 正常应答
+	if bytes, err = common.BuildResponse(0, "success", oldJob); err == nil {
+		w.Write(bytes)
+	}
+	return
+
+ERR:
+	if bytes, err = common.BuildResponse(-1, err.Error(), nil); err == nil {
+		w.Write(bytes)
+	}
+}
+
 // 保存任务
 func (jobMgr *JobMgr) SaveJob(job *common.Job) (oldJob *common.Job, err error) {
 	// 把任务保存到/cron/jobs/任务名 -> json
@@ -75,7 +110,7 @@ func (jobMgr *JobMgr) SaveJob(job *common.Job) (oldJob *common.Job, err error) {
 		oldJobObj common.Job
 	)
 
-	jobKey = "/cron/jobs/" + job.Name
+	jobKey = common.JOB_SAVE_DIR + job.Name
 	if jobValue, err = json.Marshal(job); err != nil {
 		return // error 会在返回值带回去
 	}
@@ -110,6 +145,7 @@ func InitApiServer() (err error) { // err 在这里定义住了，下面的retur
 	// 配置路由
 	mux = http.NewServeMux()
 	mux.HandleFunc("/job/save", handleJobSave)
+	mux.HandleFunc("/job/delete", handleJobDelete)
 
 	if listener, err = net.Listen("tcp", ":"+strconv.Itoa(G_config.ApiPort)); err != nil {
 		return
