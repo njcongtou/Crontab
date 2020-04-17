@@ -42,6 +42,11 @@ func main() {
 		goto ERR
 	}
 
+	// 任务管理器
+	if err = master.InitJobMgr(); err != nil {
+		return
+	}
+
 	// 启动ApiHTTP服务
 	if err = master.InitApiServer(); err != nil {
 		goto ERR
