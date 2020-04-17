@@ -22,7 +22,7 @@ require (
 	github.com/spf13/cobra v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20200122045848-3419fae592fc // indirect
-	go.etcd.io/etcd v3.3.20+incompatible // indirect
+	go.etcd.io/etcd v3.3.20+incompatible
 	go.uber.org/zap v1.14.1 // indirect
 	golang.org/x/crypto v0.0.0-20200414173820-0848c9571904 // indirect
 	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e // indirect

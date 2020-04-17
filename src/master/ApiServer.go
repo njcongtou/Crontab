@@ -133,6 +133,31 @@ func (jobMgr *JobMgr) SaveJob(job *common.Job) (oldJob *common.Job, err error) {
 	return
 }
 
+// 列举所有crontab任务
+func handleJobList(w http.ResponseWriter, r *http.Request) {
+	var (
+		jobList []*common.Job
+		bytes   []byte
+		err     error
+	)
+
+	if jobList, err = G_jobMgr.ListJobs(); err != nil {
+		goto ERR
+	}
+
+	// 正常应答
+	if bytes, err = common.BuildResponse(0, "success", jobList); err == nil {
+		w.Write(bytes)
+	}
+	return
+
+ERR:
+	if bytes, err = common.BuildResponse(-1, err.Error(), nil); err == nil {
+		w.Write(bytes)
+	}
+
+}
+
 // 初始化服务
 // 需要被其他调用，就public
 func InitApiServer() (err error) { // err 在这里定义住了，下面的return就不用再去返回err
@@ -146,6 +171,7 @@ func InitApiServer() (err error) { // err 在这里定义住了，下面的retur
 	mux = http.NewServeMux()
 	mux.HandleFunc("/job/save", handleJobSave)
 	mux.HandleFunc("/job/delete", handleJobDelete)
+	mux.HandleFunc("/job/list", handleJobList)
 
 	if listener, err = net.Listen("tcp", ":"+strconv.Itoa(G_config.ApiPort)); err != nil {
 		return

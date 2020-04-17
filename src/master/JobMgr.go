@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/coreos/etcd/mvcc/mvccpb"
+
 	"github.com/coreos/etcd/clientv3"
 )
 
@@ -75,6 +77,38 @@ func (jobMgr *JobMgr) DeleteJob(name string) (oldJob *common.Job, err error) {
 			return
 		}
 		oldJob = &oldJobObj
+	}
+
+	return
+}
+
+func (jobMgr *JobMgr) ListJobs() (jobList []*common.Job, err error) {
+	var (
+		dirKey  string
+		getResp *clientv3.GetResponse
+		kvPair  *mvccpb.KeyValue
+		job     *common.Job
+	)
+
+	// 任务保存的目录
+	dirKey = common.JOB_SAVE_DIR
+	// 获取任务下所有任务的信息
+	if getResp, err = jobMgr.kv.Get(context.TODO(), dirKey, clientv3.WithPrefix()); err != nil {
+		return
+	}
+
+	// 初始化数组空间
+	jobList = make([]*common.Job, 0)
+	// len(jobList) == 0
+
+	// 遍历所有任务，进行反序列化
+	for _, kvPair = range getResp.Kvs {
+		job = &common.Job{}
+		if err = json.Unmarshal(kvPair.Value, job); err != nil {
+			err = nil // 容忍了个别job反序列化失败
+			continue
+		}
+		jobList = append(jobList, job) // 把原先内容拷贝上去，新地址，所以要复制到原来的接收一下
 	}
 
 	return
