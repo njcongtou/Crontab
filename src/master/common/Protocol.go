@@ -1,6 +1,9 @@
 package common
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"strings"
+)
 
 // 定时任务
 type Job struct {
@@ -14,6 +17,11 @@ type Response struct {
 	Errno int         `json:"errno"`
 	Msg   string      `json:"msg"`
 	Data  interface{} `json:"data"`
+}
+
+type JobEvent struct {
+	EventType int // SAVE, DELETE
+	job       *Job
 }
 
 func BuildResponse(errno int, msg string, data interface{}) (resp []byte, err error) {
@@ -42,4 +50,19 @@ func UnpackJob(value []byte) (ret *Job, err error) {
 	}
 	ret = job
 	return
+}
+
+// 从etcd的key中提取任务名
+// /cron/jobs/job10 抹掉 /cron/jobs/
+func ExtractJobname(jobKey string) string {
+	return strings.TrimPrefix(jobKey, JOB_SAVE_DIR)
+}
+
+// 任务变化事
+func BuildJobEevent(eventType int, job *Job) (jobEvent *JobEvent) {
+	return &JobEvent{
+		EventType: eventType,
+		job:       job,
+	}
+
 }
