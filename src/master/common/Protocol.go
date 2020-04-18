@@ -3,6 +3,9 @@ package common
 import (
 	"encoding/json"
 	"strings"
+	"time"
+
+	"github.com/gorhill/cronexpr"
 )
 
 // 定时任务
@@ -10,6 +13,12 @@ type Job struct {
 	Name     string `json:"name"`     // 任务名
 	Command  string `json:"command"`  // shell 命令
 	CronExpr string `json:"cronExpr"` // cron表达式
+}
+
+type JobSchedulePlan struct {
+	Job      *Job                 // 调度的任务信息
+	Expr     *cronexpr.Expression // 解析好的cronexpr表达式
+	NextTime time.Time            // 下次调度时间
 }
 
 // HTTP 接口应答
@@ -21,7 +30,7 @@ type Response struct {
 
 type JobEvent struct {
 	EventType int // SAVE, DELETE
-	job       *Job
+	Job       *Job
 }
 
 func BuildResponse(errno int, msg string, data interface{}) (resp []byte, err error) {
@@ -62,7 +71,27 @@ func ExtractJobname(jobKey string) string {
 func BuildJobEevent(eventType int, job *Job) (jobEvent *JobEvent) {
 	return &JobEvent{
 		EventType: eventType,
-		job:       job,
+		Job:       job,
+	}
+}
+
+// 构造任务执行计划
+func BuildJobSchedulePlan(job *Job) (jobSchedulePlan *JobSchedulePlan, err error) {
+	var (
+		expr *cronexpr.Expression
+	)
+	cronexpr.Parse(job.CronExpr)
+
+	// 解析JOB的cron表达式
+	if expr, err = cronexpr.Parse(job.CronExpr); err != nil {
+		return
 	}
 
+	// 生成任务调度计划对象
+	jobSchedulePlan = &JobSchedulePlan{
+		Job:      job,
+		Expr:     expr,
+		NextTime: expr.Next(time.Now()),
+	}
+	return
 }
