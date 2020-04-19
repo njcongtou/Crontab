@@ -37,8 +37,13 @@ func main() {
 	// 初始化线程
 	initEnv()
 
-	// load config
+	// 加载配置
 	if err = worker.InitConfig(confFile); err != nil {
+		goto ERR
+	}
+
+	// 启动执行器
+	if err = worker.InitExecutor(); err != nil {
 		goto ERR
 	}
 
